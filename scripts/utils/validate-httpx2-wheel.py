@@ -12,6 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 BASE_TEST = ROOT / "tests/test_httpx2_base.py"
 HTTPX2_TEST = ROOT / "tests/test_httpx2.py"
+HTTPX2_HTTP2_TEST = ROOT / "tests/test_httpx2_http2.py"
 LEGACY_TEST = ROOT / "tests/test_httpx_compat.py"
 TLS_TEST = ROOT / "tests/test_tls_hostname.py"
 
@@ -45,7 +46,7 @@ def validate_metadata(wheel: Path) -> None:
 
     if metadata["Requires-Python"] != ">=3.10":
         raise RuntimeError(f"Expected Python >=3.10, found: {metadata['Requires-Python']}")
-    for expected in ("httpx2<3,>=2.12.0", "anyio<5,>=4.10.0"):
+    for expected in ("httpx2[http2]<3,>=2.12.0", "anyio<5,>=4.10.0"):
         if not any(value.startswith(expected) for value in base):
             raise RuntimeError(f"Expected the base wheel to require {expected}: {base}")
     if any(requirement_name(value) == "httpx" for value in requirements):
@@ -111,8 +112,8 @@ def main() -> None:
     wheel = wheels[0]
     validate_metadata(wheel)
 
-    common = ["pytest==9.0.3", "pytest-asyncio==1.4.0", "pygments==2.20.0"]
-    run_case(wheel, extra=None, tests=[BASE_TEST, HTTPX2_TEST], dependencies=common)
+    common = ["pytest==9.0.3", "pytest-asyncio==1.4.0", "pygments==2.20.0", "cryptography>=50.0.0"]
+    run_case(wheel, extra=None, tests=[BASE_TEST, HTTPX2_TEST, HTTPX2_HTTP2_TEST], dependencies=[*common])
     run_case(wheel, extra="aiohttp", tests=[BASE_TEST], dependencies=common)
     run_case(
         wheel,
